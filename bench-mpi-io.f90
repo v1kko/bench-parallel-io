@@ -47,10 +47,12 @@ program bench_mpi_io
   ! create processor grid
   !
   dims(:) = 0
-  call MPI_DIMS_CREATE(nproc,3,dims(:),ierr)
+  coords(:) = 0
+  call MPI_DIMS_CREATE(nproc,2,dims(2:3),ierr)
   !
-  call MPI_CART_CREATE(MPI_COMM_WORLD,3,dims,[.false.,.false.,.false.],.true.,comm_cart,ierr)
-  call MPI_CART_COORDS(comm_cart,myid,3,coords,ierr)
+  call MPI_CART_CREATE(MPI_COMM_WORLD,2,dims(2:3),[.false.,.false.],.true.,comm_cart,ierr)
+  call MPI_CART_COORDS(comm_cart,myid,2,coords(2:3),ierr)
+  dims(1) = 1
   !
   ! decompose the domain
   !
