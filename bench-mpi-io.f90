@@ -6,11 +6,11 @@ program bench_mpi_io
   !
   ! input domain parameters
   !
-  integer , parameter,       dimension(3) :: n    = [256,256,256]
+  integer , parameter,       dimension(3) :: n    = [1024,1024,1024]
   !
   ! file names
   !
-  character(len=*), parameter             :: file_i = 'data/fld.bin', &
+  character(len=*), parameter             :: file_i = '/scratch-shared/vazizi/fld.bin', &
                                              file_o = file_i
   !
   ! local problem sizes
@@ -67,10 +67,10 @@ program bench_mpi_io
   !
   ! create some random data
   !
-  u(:,:,:) = 1._rp*myid
-  v(:,:,:) = 2._rp*myid
-  w(:,:,:) = 3._rp*myid
-  p(:,:,:) = 4._rp*myid
+  call random_number(u)
+  call random_number(v)
+  call random_number(w)
+  call random_number(p)
   istep    = 420
   time     = 42._rp
   !

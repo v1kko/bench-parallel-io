@@ -10,11 +10,11 @@ program bench_hdf5_io
   !
   ! input domain parameters
   !
-  integer , parameter,       dimension(3) :: n    = [256,256,256]
+  integer , parameter,       dimension(3) :: n    = [1024,1024,1024]
   !
   ! file names
   !
-  character(len=*), parameter             :: file_i = 'data/fld.bin', &
+  character(len=*), parameter             :: file_i = '/scratch-shared/vazizi/fld.bin', &
                                              file_o = file_i
   !
   ! local problem sizes
@@ -76,15 +76,15 @@ program bench_hdf5_io
   !
   ! create some random data
   !
-  u(:,:,:) = 1._rp*myid
-  v(:,:,:) = 2._rp*myid
-  w(:,:,:) = 3._rp*myid
-  p(:,:,:) = 4._rp*myid
+  call random_number(u)
+  call random_number(v)
+  call random_number(w)
+  call random_number(p)
   istep    = 420
   time     = 42._rp
 
   ! remove existing checkpoint
-  call unlink('fld.h5')
+  call unlink(file_i)
 
   !
   ! write w/ MPI I/O an time it
@@ -159,9 +159,9 @@ contains
     !
     select case(io)
     case('r')
-      call io_field_hdf5('r',"fld.h5",c_io_vars,MPI_COMM_WORLD,ng,nh,lo,hi,io_vars,time,istep,4)
+      call io_field_hdf5('r',filename,c_io_vars,MPI_COMM_WORLD,ng,nh,lo,hi,io_vars,time,istep,4)
     case('w')
-      call io_field_hdf5('w',"fld.h5",c_io_vars,MPI_COMM_WORLD,ng,nh,lo,hi,io_vars,time,istep,4)
+      call io_field_hdf5('w',filename,c_io_vars,MPI_COMM_WORLD,ng,nh,lo,hi,io_vars,time,istep,4)
     end select
   end subroutine load
   !
@@ -189,9 +189,9 @@ contains
     integer(int32) , intent(inout) :: istep
 
     ! adjustable parameters
-    logical :: chunk_checkpoint = .false.
+    logical :: chunk_checkpoint = .true.
     integer :: compression_level = 0
-    integer :: chunk_size = 32
+    integer :: chunk_size = 16
     integer :: ipencil_axis = 1
 
     real(real64), pointer, dimension(:,:,:) :: var
@@ -232,6 +232,7 @@ contains
     ! Common operations
     call h5open_f(ierr)
 
+
     call h5pcreate_f(h5p_dataset_xfer_f, xfer_pid, ierr)
     call h5pset_dxpl_mpio_f(xfer_pid, H5FD_MPIO_COLLECTIVE_F, ierr)
     call h5pcreate_f(h5p_file_access_f, file_pid, ierr)
@@ -258,10 +259,9 @@ contains
 
     select case(io)
     case('r')
-
       inquire(file=filename,exist=file_exists)
       if (file_exists) then 
-        call h5fopen_f(filename, H5F_ACC_RDWR_F, file_id, ierr, access_prp=file_pid)
+        call h5fopen_f(filename, H5F_ACC_RDONLY_F, file_id, ierr, access_prp=file_pid)
       else
         error stop "Checkpoint file "//filename//"  does not exist"
       endif
